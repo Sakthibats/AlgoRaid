@@ -4,17 +4,18 @@ import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output
 import plotly.graph_objs as go
-from binance.client import Client
-from dotenv import load_dotenv
+# from binance.client import Client
+# from dotenv import load_dotenv
 import pandas as pd
+import json
 
 # Load environment variables
-load_dotenv()
+# load_dotenv()
 
 # Initialize Binance client
-binance_api_key = os.getenv('API_KEY')
-binance_api_secret = os.getenv('SECRET_KEY')
-client = Client(api_key=binance_api_key, api_secret=binance_api_secret)
+# binance_api_key = os.getenv('API_KEY')
+# binance_api_secret = os.getenv('SECRET_KEY')
+# client = Client(api_key=binance_api_key, api_secret=binance_api_secret)
 
 # Initialize Flask server
 server = Flask(__name__)
@@ -45,14 +46,23 @@ app.layout = html.Div(
 
 # Function to fetch historical data from Binance
 def fetch_historical_data(symbol):
-    klines = client.get_historical_klines(
-        symbol,
-        Client.KLINE_INTERVAL_1DAY,
-        "1 year ago UTC"
-    )
+    # klines = client.get_historical_klines(
+    #     symbol,
+    #     Client.KLINE_INTERVAL_1DAY,
+    #     "1 year ago UTC"
+    # )
+    # print(klines)
+
+    # with open(f'data/{symbol}.txt', 'w') as filehandle:
+    #     json.dump(klines, filehandle)
+
+    # Reading the data back from the file
+    with open(f'data/{symbol}.txt', 'r') as filehandles:
+        klinesed = json.load(filehandles)
+    
     # Create a DataFrame
     df = pd.DataFrame(
-        klines, 
+        klinesed, 
         columns=['timestamp', 'open', 'high', 'low', 'close', 'volume', 'close_time',
                  'quote_asset_volume', 'number_of_trades', 'taker_buy_base_asset_volume', 
                  'taker_buy_quote_asset_volume', 'ignore']
@@ -90,4 +100,4 @@ def index():
 
 # Run the server
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run(host="0.0.0.0", port=8000, debug=True)
