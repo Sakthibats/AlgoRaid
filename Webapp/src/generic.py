@@ -1,5 +1,5 @@
 import pandas as pd
-from src.boilerplate import boilerplate1
+from src.binance_boilerplate import boilerplate1
 from dotenv import load_dotenv
 import os
 import requests

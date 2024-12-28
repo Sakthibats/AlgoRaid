@@ -19,15 +19,26 @@ h1 {
 }
 
 .filter-divs{
-    justify-content: flex-start;
+    justify-content:flex-start;
     display: flex;
     flex-direction: row;
+    align-items: center;
 }
 
 .filter-item{
+    display: flex;
     flex-direction: column;
     margin: 10px;
     width: 20%;
+}
+
+.submit-item{
+    display: flex;
+    flex-direction: column;
+    margin: 10px;
+    width: 20%;
+    align-items: flex-end;
+    align-self: flex-end;
 }
 
 .dropdown-class-2{
@@ -66,7 +77,23 @@ h1 {
     margin: 10px auto;
     width: 100%;
     font-size: 16px;
-    padding: 6px;
-    border: 1.5px solid #D3D3D3;
-    border-radius: 3px;
 }
+
+.numerical-input:focus{
+    box-shadow: none;
+}
+
+.submit-button{
+    background-color: #ffbc1e;
+    border-color: #ffbc1e;
+    width: 50%;
+
+}
+
+.submit-button:hover{
+    background-color: #ffbc1e;
+    border-color: #c4911b;
+}
+
+
+
