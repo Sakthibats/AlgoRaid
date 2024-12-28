@@ -1,75 +1,83 @@
-import os
-from flask import Flask, render_template
-import dash
-from dash import dcc, html
-from dash.dependencies import Input, Output
-import plotly.graph_objs as go
-# from binance.client import Client
-# from dotenv import load_dotenv
-import pandas as pd
-import json
+from src.logic import fetch_historical_data_live
+from flask import Flask # type: ignore
+import dash # type: ignore
+from dash import dcc, html # type: ignore
+from dash.dependencies import Input, Output # type: ignore
+import plotly.graph_objs as go # type: ignore
 
-# Load environment variables
-# load_dotenv()
-
-# Initialize Binance client
-# binance_api_key = os.getenv('API_KEY')
-# binance_api_secret = os.getenv('SECRET_KEY')
-# client = Client(api_key=binance_api_key, api_secret=binance_api_secret)
 
 # Initialize Flask server
 server = Flask(__name__)
 
 # Initialize Dash app
 app = dash.Dash(__name__, server=server, url_base_pathname='/')
+app.title = "BNB DualOptions Analytics"
+app._favicon = ("birdlogo1.png")
 
 # Define Dash layout
 app.layout = html.Div(
-    style={'backgroundColor': '#f0f8ff', 'textAlign': 'center', 'fontFamily': 'Arial'},
+    className="contentSection",
     children=[
-        html.H1('Algoraid Options', style={'color': '#1E90FF'}),
-        html.Label('Choose a Cryptocurrency:', style={'color': '#4682B4'}),
-        dcc.Dropdown(
-            id='crypto-dropdown',
-            options=[
-                {'label': 'Bitcoin (BTC)', 'value': 'BTC'},
-                {'label': 'Ethereum (ETH)', 'value': 'ETH'},
-                {'label': 'Dogecoin (DOGE)', 'value': 'DOGE'},
-                {'label': 'Solana (SOL)', 'value': 'SOL'},
-            ],
-            value='BTC',  # Default value
-            style={'width': '50%', 'margin': 'auto'}
-        ),
+        html.H1('Binance Dual Options visualizer', style={'textAlign': 'left'} ),
+        html.Div(
+            className="filter-divs",
+            children=[
+                html.Div(
+                    className="filter-item",
+                    children=[
+                        html.Label('Choose a Direction:', style={'color': '#4682B4'}),
+                        dcc.Dropdown(
+                            id='putcall',
+                            className='dropdown-class-1',
+                            options=[
+                                {'label': 'Sell High (Price to go up)', 'value': 'Put'},
+                                {'label': 'Buy Low (Price to go down)', 'value': 'Call'},
+                            ],
+                            value='Put',  # Default value
+                            clearable=False
+                        )
+                    ]
+                ),
+                html.Div(
+                    className="filter-item",
+                    children=[
+                        html.Label('Choose a Cryptocurrency:', style={'color': '#4682B4'}),
+                        dcc.Dropdown(
+                            id='crypto-dropdown',
+                            className='dropdown-class-2',
+                            options=[
+                                {'label': 'Bitcoin (BTC)', 'value': 'BTC'},
+                                {'label': 'Ethereum (ETH)', 'value': 'ETH'},
+                                {'label': 'Dogecoin (DOGE)', 'value': 'DOGE'},
+                                {'label': 'Solana (SOL)', 'value': 'SOL'},
+                            ],
+                            value='BTC',  # Default value
+                            clearable=False
+                        )
+                    ]
+                ),
+                html.Div(
+                    className="filter-item",
+                    children=[
+                        html.Label('USD value at play:', style={'color': '#4682B4'}),
+                        dcc.Input(
+                            className="numerical-input",
+                            id='numeric-input',
+                            type='text',  # Accept text to allow validation
+                            placeholder="Enter a number",
+                            debounce=True,  # Trigger callback on 'Enter' or when the user clicks away
+                        ),
+                        html.Div(id='error-message', style={'color': 'red'}),
+                    ]
+                )
+
+                
+            ]
+        )
+        ,
         dcc.Graph(id='price-graph'),
     ]
 )
-
-# Function to fetch historical data from Binance
-def fetch_historical_data(symbol):
-    # klines = client.get_historical_klines(
-    #     symbol,
-    #     Client.KLINE_INTERVAL_1DAY,
-    #     "1 year ago UTC"
-    # )
-    # print(klines)
-
-    # with open(f'data/{symbol}.txt', 'w') as filehandle:
-    #     json.dump(klines, filehandle)
-
-    # Reading the data back from the file
-    with open(f'data/{symbol}.txt', 'r') as filehandles:
-        klinesed = json.load(filehandles)
-    
-    # Create a DataFrame
-    df = pd.DataFrame(
-        klinesed, 
-        columns=['timestamp', 'open', 'high', 'low', 'close', 'volume', 'close_time',
-                 'quote_asset_volume', 'number_of_trades', 'taker_buy_base_asset_volume', 
-                 'taker_buy_quote_asset_volume', 'ignore']
-    )
-    df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
-    df['close'] = df['close'].astype(float)
-    return df[['timestamp', 'close']]
 
 # Define callback for dropdown interaction
 @app.callback(
@@ -78,7 +86,7 @@ def fetch_historical_data(symbol):
 )
 def update_graph(selected_crypto):
     symbol = f"{selected_crypto}USDC"
-    df = fetch_historical_data(symbol)
+    df = fetch_historical_data_live(symbol)
     
     # Create the figure
     fig = go.Figure(
@@ -87,17 +95,35 @@ def update_graph(selected_crypto):
             title=f'{selected_crypto}/USDC Price Over the Past Year',
             xaxis_title='Date',
             yaxis_title='Price (USDC)',
-            plot_bgcolor='#f0f8ff',
-            paper_bgcolor='#f0f8ff'
+            plot_bgcolor='#fffefb',
+            paper_bgcolor='#fffefb'
         )
     )
     return fig
 
-# Define Flask route
-@server.route('/')
-def index():
-    return render_template('index.html')
+
+@app.callback(
+    [Output('numeric-input', 'value'),
+     Output('error-message', 'children')],
+    [Input('numeric-input', 'value')]
+)
+def validate_and_format(value):
+    if value is None or value.strip() == "":
+        return "", ""  # Reset value if empty
+
+    try:
+        # Remove commas and validate the input as a positive number
+        clean_value = value.replace(",", "")
+        number = float(clean_value)
+        if number < 0:
+            return value, "Please enter a positive number."
+        
+        # Format the value with commas and return
+        formatted_value = f"{number:,.0f}"  # Format to 3-digit comma delimited (no decimals)
+        return formatted_value, ""  # No error message
+    except ValueError:
+        return value, "Please enter a valid numeric value."
 
 # Run the server
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=8000, debug=True)
+    app.run(debug=True)

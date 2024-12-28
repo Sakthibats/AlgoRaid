@@ -1,0 +1,72 @@
+body {
+    background-color: #fffefb;
+    font-family: Arial, sans-serif;
+}
+
+h1 {
+    color: #ffbc1e;
+}
+
+.label {
+    color: #4682B4;
+}
+
+.contentSection{
+    background-color: #fffefb;
+    text-align: 'center';
+    font-family: 'Arial';
+    margin: 20px;
+}
+
+.filter-divs{
+    justify-content: flex-start;
+    display: flex;
+    flex-direction: row;
+}
+
+.filter-item{
+    flex-direction: column;
+    margin: 10px;
+    width: 20%;
+}
+
+.dropdown-class-2{
+    width: 100%;
+    margin: 10px auto;
+    font-size: 16px;
+}
+
+/* Style the dropdown container */
+.dropdown-class-1 {
+    width: 100%; /* Adjust width */
+    margin: 10px auto;
+    font-size: 16px;
+}
+
+/* Style the dropdown menu */
+.dropdown-class-1 .Select-menu {
+    background-color: #f9f9f9;
+}
+
+/* Style the options in the dropdown */
+.dropdown-class-1 .select-option {
+    font-size: 16px;
+    color: black;
+    padding: 10px;
+    transition: background-color 0.3s ease-in-out;
+}
+
+/* Highlight the selected option */
+.dropdown-class-1 .select-option.is-selected {
+    background-color: #e0e0e0;
+    font-weight: bold;
+}
+
+.numerical-input{
+    margin: 10px auto;
+    width: 100%;
+    font-size: 16px;
+    padding: 6px;
+    border: 1.5px solid #D3D3D3;
+    border-radius: 3px;
+}

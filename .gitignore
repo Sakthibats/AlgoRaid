@@ -2,3 +2,4 @@
 .env
 /.webvenv
 *__pycache__/
+/Experiments/figures
