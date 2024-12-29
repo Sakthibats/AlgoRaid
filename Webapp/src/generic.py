@@ -1,6 +1,6 @@
-import pandas as pd
+import pandas as pd # type: ignore
 from src.binance_boilerplate import boilerplate1
-import plotly.graph_objs as go
+import plotly.graph_objs as go # type: ignore
 import json
 
 def get_price(symbol):

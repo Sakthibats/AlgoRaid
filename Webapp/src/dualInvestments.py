@@ -1,8 +1,8 @@
 import time
 from src.binance_boilerplate import boilerplate
 from src.generic import get_price
-import pandas as pd
-import plotly.express as px
+import pandas as pd # type: ignore
+import plotly.express as px # type: ignore
 
 
 def get_DCI_products(optionType, exercisedCoin, investCoin, pageSize, pageIndex):
