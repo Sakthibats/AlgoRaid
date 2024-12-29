@@ -25,11 +25,11 @@ def get_DCI_products(optionType, exercisedCoin, investCoin, pageSize, pageIndex)
 
 
 def get_DualInvestment_assetPair(Direction, TargetItem, AssetItem, USDamt, curr_price):
-    print(Direction, TargetItem, AssetItem)
+    # print(Direction, TargetItem, AssetItem)
     first = get_DCI_products(Direction, TargetItem, AssetItem, pageIndex=1, pageSize=1)
     full_list = first["list"]
     total = first["total"]
-    print(total)
+    # print(total)
 
     for i in range(total//100+1):
         try:
@@ -38,8 +38,8 @@ def get_DualInvestment_assetPair(Direction, TargetItem, AssetItem, USDamt, curr_
         except Exception as e:
             print(f"ERROR found: {e}")
 
-    print("---------------------------")
-    print(len(full_list))
+    # print("---------------------------")
+    # print(len(full_list))
     df = pd.DataFrame(full_list)
     df["curr_price"]  = curr_price
     df["strikePrice"] = pd.to_numeric(df["strikePrice"])
@@ -50,14 +50,14 @@ def get_DualInvestment_assetPair(Direction, TargetItem, AssetItem, USDamt, curr_
     df["strikePrice"] = df.strikePrice.astype(float)
     df["apr"] = df.apr.astype(float)
     df["1000return"] = df["apr"]*df["duration"]*1000/365
-    df["USDamt"] = df["1000return"]*USDamt/1000
+    df["PremiumReceived(USD)"] = df["1000return"]*USDamt/1000
     return df
 
 def getData_dualInvestment(direction, target, USDamt):
 
     curr_price = float(get_price(f"{target}USDC")["price"]) #ETH
 
-    print(f"{target} price {curr_price}")
+    # print(f"{target} price {curr_price}")
 
     stablecoin_list = ["USDC", "USDT", "FDUSD"]
     fin = []
@@ -83,7 +83,7 @@ def getGraph_dualInvestment_all_func(df, direction, target):
     color_text = ['exercisedCoin', 'investCoin'][direction=="PUT"]
     verbose = ["Sell-High", "Buy-Low"][direction=="PUT"]
     
-    fig = px.scatter(df, x="duration", y="apr", color=color_text, title=f"{target} {direction} ({verbose}) Options under Dual investment", hover_data=["1000return", "USDamt", "Percent_to_strikeprice", "strikePrice"])
+    fig = px.scatter(df, x="duration", y="apr", color=color_text, title=f"{target} {direction} ({verbose}) Options under Dual investment", hover_data=["PremiumReceived(USD)", "Percent_to_strikeprice", "strikePrice"])
     
     return fig
 
@@ -94,6 +94,6 @@ def getGraph_dualInvestment_day_func(df, direction, target, duration):
     color_text = ['exercisedCoin', 'investCoin'][direction=="PUT"]
     verbose = ["Sell-High", "Buy-Low"][direction=="PUT"]
 
-    fig = px.line(df_time, x="strikePrice", y="apr", color=color_text, title=f"{target} {direction} ({verbose}) Options under Dual investment ({duration} days)", markers=True, hover_data=["1000return", "USDamt", "Percent_to_strikeprice", "strikePrice"])
+    fig = px.line(df_time, x="strikePrice", y="apr", color=color_text, title=f"{target} {direction} ({verbose}) Options under Dual investment ({duration} days)", markers=True, hover_data=["PremiumReceived(USD)", "Percent_to_strikeprice", "strikePrice"])
 
     return fig

@@ -1,24 +1,23 @@
-# Use an official Python runtime as a parent image
-FROM python:3.10-slim
+# Use the official Python 3.12 slim image
+FROM python:3.12-slim
 
-# Set the working directory
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy the requirements file into the container
-COPY requirements.txt /app/requirements.txt
+# Copy only necessary files
+COPY requirements.txt requirements.txt
 
-# Install dependencies
+COPY . .  
+
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application code into the container
-COPY . /app
-
-# Expose the port Dash will run on
+# Expose the port the app runs on
 EXPOSE 8050
 
 # Set environment variables for Flask
 ENV FLASK_APP=app.py
 ENV FLASK_ENV=production
 
-# Run the Dash application
-CMD ["python", "app.py"]
+# Command to run the app
+CMD ["waitress-serve", "--host=0.0.0.0", "--port=8050", "--threads=8", "app:app.server"]

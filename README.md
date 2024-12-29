@@ -9,7 +9,8 @@ Experiments folder contains 2 experiments primarily
 - Binance Cash secured puts and Covered call analysis
     - Charts about the yield at different strike price
 
-##### WebApp
+##### Binance DualInvestment Options visualisation WebApp
+Hosted link: https://bnoptionsvisualizer-gncaafe3hjffdza9.canadaeast-01.azurewebsites.net/ 
 Python flask Dash Plotly Webapp to visualise Binance options under the Dual Investment category. Dual investment products effectively provide cash secured puts and Covered calls with easier UI. With this tool we could expedite our analysis of the risk taken and the potential returns. Binance dualinvestment products are european options and all data is directly from Binance API
 
 Screenshots of Webapp

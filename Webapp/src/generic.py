@@ -1,3 +1,4 @@
+import time
 import pandas as pd # type: ignore
 from src.binance_boilerplate import boilerplate1
 import plotly.graph_objs as go # type: ignore
@@ -19,10 +20,15 @@ def get_price_historical(symbol, interval):
     # Define the endpoint and base URL
     endpoint = '/api/v3/klines'
 
+    now = int(time.time() * 1000)
+    six_months_ago = now - (180 * 24 * 60 * 60 * 1000)
+
     # Define request parameters
     params = {
         'symbol': symbol,   
-        'interval': interval  
+        'interval': interval,
+        'startTime': six_months_ago,
+        'endTime': now
     }
     return boilerplate1(params, endpoint)
 

@@ -30,7 +30,7 @@ app.layout = html.Div(
                 html.Div(
                     className="filter-item",
                     children=[
-                        html.Label('Choose a Direction:', style={'color': '#4682B4'}),
+                        html.Label('Choose a Direction:'),
                         dcc.Dropdown(
                             id='putcall-select',
                             className='dropdown-class-1',
@@ -72,13 +72,13 @@ app.layout = html.Div(
                             placeholder="Enter a number",
                             debounce=True,  # Trigger callback on 'Enter' or when the user clicks away
                             autoComplete="off",
-                            value="1,000"
+                            value="10,000"
                         ),
                         html.Div(id='error-message', style={'color': 'red'}),
                     ]
                 ),
                 html.Div(
-                    className="submit-item",
+                    className="filter-item",
                     children=[
                         dbc.Button("Update Graph", 
                                     className="submit-button",
@@ -97,7 +97,7 @@ app.layout = html.Div(
             children=[
                 dcc.Graph(id='options-graph-overall'),  # Placeholder for the graph
                 html.Label('Number of days to expiration:', style={'color': '#4682B4'}),
-                dcc.Dropdown(id="duration-select"),
+                dcc.Dropdown(id="duration-select", className="dropdown-class-2"),
                 dcc.Graph(id='options-graph-day'),  # Placeholder for the graph
             ]
         ),
@@ -134,6 +134,9 @@ def validate_and_format(number_text):
     State('numeric-input', 'value')
 )
 def makeGraph_dualInvestment_all_func(n_clicks, option_dir, crypto, usd_amt_string):
+    if n_clicks is None:
+        # If the button hasn't been clicked, prevent any action
+        raise dash.exceptions.PreventUpdate
     usd_amt = int("".join(usd_amt_string.split(",")))
     data = getData_dualInvestment( option_dir, crypto, usd_amt)
     data_dict = data.to_dict('records')
@@ -156,4 +159,6 @@ def makeGraph_dualInvestment_day_func(stored_data, duration, option_dir, crypto)
 
 # Run the server
 if __name__ == '__main__':
-    app.run()
+    from waitress import serve
+    serve(app.server, host='0.0.0.0', port=8050, threads=8)  # Increase thread count
+    # app.run(debug=True) #debug mode
