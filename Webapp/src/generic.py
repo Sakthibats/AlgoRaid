@@ -1,16 +1,6 @@
 import pandas as pd
 from src.binance_boilerplate import boilerplate1
-from dotenv import load_dotenv
-import os
-import requests
-import time
-import hashlib
-import hmac
-import plotly.express as px
 import plotly.graph_objs as go
-import matplotlib.pyplot as plt
-import seaborn as sns
-from datetime import datetime
 import json
 
 def get_price(symbol):
@@ -55,7 +45,7 @@ def fetch_historical_data_cache(symbol):
     return df[['timestamp', 'close']]
 
 # Function to fetch historical data from Binance
-def fetch_historical_data_live(symbol):
+def getData_historical_live(symbol):
 
     klinesed = get_price_historical(symbol, "1d")
     
@@ -69,3 +59,35 @@ def fetch_historical_data_live(symbol):
     df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
     df['close'] = df['close'].astype(float)
     return df[['timestamp', 'close']]
+
+
+def getGraph_historical_live(df, selected_crypto):
+    # Create the figure
+    fig = go.Figure(
+        data=[go.Scatter(x=df['timestamp'], y=df['close'], mode='lines', name=selected_crypto)],
+        layout=go.Layout(
+            title=f'{selected_crypto}/USDC Price Over the Past Year',
+            xaxis_title='Date',
+            yaxis_title='Price (USDC)',
+            plot_bgcolor='#fffefb',
+            paper_bgcolor='#fffefb'
+        )
+    )
+    return fig
+
+def numeric_formating_validation(value):
+    if value is None or value.strip() == "":
+        return "", ""  # Reset value if empty
+
+    try:
+        # Remove commas and validate the input as a positive number
+        clean_value = value.replace(",", "")
+        number = float(clean_value)
+        if number < 0:
+            return value, "Please enter a positive number."
+        
+        # Format the value with commas and return
+        formatted_value = f"{number:,.0f}"  # Format to 3-digit comma delimited (no decimals)
+        return formatted_value, ""  # No error message
+    except ValueError:
+        return value, "Please enter a valid numeric value."

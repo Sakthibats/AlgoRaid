@@ -1,6 +1,5 @@
 import time
 from src.binance_boilerplate import boilerplate
-from src.binance_boilerplate import boilerplate1
 from src.generic import get_price
 import pandas as pd
 import plotly.express as px
@@ -54,38 +53,47 @@ def get_DualInvestment_assetPair(Direction, TargetItem, AssetItem, USDamt, curr_
     df["USDamt"] = df["1000return"]*USDamt/1000
     return df
 
-def get_dualInvestment_options(direction, target, USDamt):
+def getData_dualInvestment(direction, target, USDamt):
 
     curr_price = float(get_price(f"{target}USDC")["price"]) #ETH
 
     print(f"{target} price {curr_price}")
 
-    listt = ["USDC", "USDT", "FDUSD"]
+    stablecoin_list = ["USDC", "USDT", "FDUSD"]
     fin = []
 
     if direction=="CALL":
-        for i in listt:
+        for stablecoin in stablecoin_list:
             try:
-                partial_df = get_DualInvestment_assetPair(direction, i, target, USDamt, curr_price)
+                partial_df = get_DualInvestment_assetPair(direction, stablecoin, target, USDamt, curr_price)
                 fin.append(partial_df)
             except Exception as e:
                 print(f"exception found: {e}")
     else:
-        for i in listt:
-            partial_df = get_DualInvestment_assetPair(direction, target, i, USDamt, curr_price)
+        for stablecoin in stablecoin_list:
+            partial_df = get_DualInvestment_assetPair(direction, target, stablecoin, USDamt, curr_price)
             fin.append(partial_df)
 
     df = pd.concat(fin)
 
-    df_copy = df[df["duration"]<=20]
-
     return df
 
-def getGraph_dualInvestment_options_all_func(df_copy, direction):
+def getGraph_dualInvestment_all_func(df, direction, target):
 
-    if direction=="CALL":
-        fig = px.scatter(df_copy, x="duration", y="apr", color='exercisedCoin', hover_data=["1000return", "USDamt", "Percent_to_strikeprice", "strikePrice"])
-    else:
-        fig = px.scatter(df_copy, x="duration", y="apr", color='investCoin', hover_data=["1000return", "USDamt", "Percent_to_strikeprice", "strikePrice"])
+    color_text = ['exercisedCoin', 'investCoin'][direction=="PUT"]
+    verbose = ["Sell-High", "Buy-Low"][direction=="PUT"]
     
+    fig = px.scatter(df, x="duration", y="apr", color=color_text, title=f"{target} {direction} ({verbose}) Options under Dual investment", hover_data=["1000return", "USDamt", "Percent_to_strikeprice", "strikePrice"])
+    
+    return fig
+
+def getGraph_dualInvestment_day_func(df, direction, target, duration):
+
+    df_time = df[df["duration"]==duration]
+
+    color_text = ['exercisedCoin', 'investCoin'][direction=="PUT"]
+    verbose = ["Sell-High", "Buy-Low"][direction=="PUT"]
+
+    fig = px.line(df_time, x="strikePrice", y="apr", color=color_text, title=f"{target} {direction} ({verbose}) Options under Dual investment ({duration} days)", markers=True, hover_data=["1000return", "USDamt", "Percent_to_strikeprice", "strikePrice"])
+
     return fig

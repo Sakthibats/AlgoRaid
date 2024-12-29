@@ -1,11 +1,12 @@
-from src.dualInvestments import get_dualInvestment_options, getGraph_dualInvestment_options_all_func
-from src.generic import fetch_historical_data_live
+from src.dualInvestments import getData_dualInvestment, getGraph_dualInvestment_all_func, getGraph_dualInvestment_day_func
+from src.generic import getData_historical_live, getGraph_historical_live, numeric_formating_validation
 from flask import Flask # type: ignore
 import dash # type: ignore
 from dash import dcc, html# type: ignore
 from dash.dependencies import Input, Output, State # type: ignore
 import plotly.graph_objs as go # type: ignore
 import dash_bootstrap_components as dbc # type: ignore
+import pandas as pd # type: ignore
 
 
 
@@ -25,6 +26,7 @@ app.layout = html.Div(
         html.Div(
             className="filter-divs",
             children=[
+                dcc.Store(id='stored-data'),
                 html.Div(
                     className="filter-item",
                     children=[
@@ -91,93 +93,66 @@ app.layout = html.Div(
         # Loading spinner
         dcc.Loading(
             id="loading-spinner",
-            type="circle",  # Spinner type: "circle", "dot", or "default"
+            type="default",  # Spinner type: "circle", "dot", or "default"
             children=[
-                dcc.Graph(id='options-graph-overall')  # Placeholder for the graph
+                dcc.Graph(id='options-graph-overall'),  # Placeholder for the graph
+                html.Label('Number of days to expiration:', style={'color': '#4682B4'}),
+                dcc.Dropdown(id="duration-select"),
+                dcc.Graph(id='options-graph-day'),  # Placeholder for the graph
             ]
         ),
     ]
 )
 
-# Define callback for dropdown interaction
 @app.callback(
     Output('price-graph', 'figure'),
     [Input('crypto-select', 'value')]
 )
-def update_graph(selected_crypto):
+def update_historical_live(selected_crypto):
     symbol = f"{selected_crypto}USDC"
-    df = fetch_historical_data_live(symbol)
-    
-    # Create the figure
-    fig = go.Figure(
-        data=[go.Scatter(x=df['timestamp'], y=df['close'], mode='lines', name=selected_crypto)],
-        layout=go.Layout(
-            title=f'{selected_crypto}/USDC Price Over the Past Year',
-            xaxis_title='Date',
-            yaxis_title='Price (USDC)',
-            plot_bgcolor='#fffefb',
-            paper_bgcolor='#fffefb'
-        )
-    )
+    df = getData_historical_live(symbol)
+    fig = getGraph_historical_live(df, selected_crypto)
     return fig
-
 
 @app.callback(
     [Output('numeric-input', 'value'),
      Output('error-message', 'children')],
     [Input('numeric-input', 'value')]
 )
-def validate_and_format(value):
-    if value is None or value.strip() == "":
-        return "", ""  # Reset value if empty
-
-    try:
-        # Remove commas and validate the input as a positive number
-        clean_value = value.replace(",", "")
-        number = float(clean_value)
-        if number < 0:
-            return value, "Please enter a positive number."
-        
-        # Format the value with commas and return
-        formatted_value = f"{number:,.0f}"  # Format to 3-digit comma delimited (no decimals)
-        return formatted_value, ""  # No error message
-    except ValueError:
-        return value, "Please enter a valid numeric value."
-
+def validate_and_format(number_text):
+    value, error = numeric_formating_validation(number_text)
+    return value, error
+    
 @app.callback(
+    Output('stored-data', 'data'),
     Output('options-graph-overall', 'figure'),
+    Output("duration-select", "options"),
+    Output("duration-select", "value"),
     Input('submit-button', 'n_clicks'),
     State('putcall-select', 'value'),
     State('crypto-select', 'value'),
     State('numeric-input', 'value')
 )
-def process_inputs(n_clicks, option_dir, crypto, usd_amt_string):    
-    # Convert to integer
-    print(usd_amt_string, type(usd_amt_string))
+def makeGraph_dualInvestment_all_func(n_clicks, option_dir, crypto, usd_amt_string):
     usd_amt = int("".join(usd_amt_string.split(",")))
+    data = getData_dualInvestment( option_dir, crypto, usd_amt)
+    data_dict = data.to_dict('records')
+    getGraph_dualInvestment_all = getGraph_dualInvestment_all_func(data, option_dir, crypto)
+    durations = sorted([int(duration) for duration in data["duration"].unique()])
 
-    print(n_clicks, option_dir, crypto, usd_amt )
+    return data_dict, getGraph_dualInvestment_all, durations, durations[0]
 
-    # Validate inputs (you can customize this logic as needed)
-    # errors = []
-    # if not option_dir:
-    #     errors.append("Options direction is required.")
-    # if not crypto:
-    #     errors.append("Crypto asset is required.")
-    # if usd_amt is None or usd_amt<=0:
-    #     errors.append("usd value is required and be Positive")
-
-    # if errors:
-    #     return html.Div([html.Div(error, style={'color': 'red'}) for error in errors])
-
-    # Combine and display results
-
-    data = get_dualInvestment_options( option_dir, crypto, usd_amt)
-
-    getGraph_dualInvestment_options_all = getGraph_dualInvestment_options_all_func(data, option_dir)
-
-
-    return getGraph_dualInvestment_options_all
+@app.callback(
+    Output('options-graph-day', 'figure'),
+    Input('stored-data', 'data'),
+    Input("duration-select", "value"),
+    State('putcall-select', 'value'),
+    State('crypto-select', 'value'),
+)
+def makeGraph_dualInvestment_day_func(stored_data, duration, option_dir, crypto):
+    data = pd.DataFrame.from_records(stored_data)
+    getGraph_dualInvestment__day = getGraph_dualInvestment_day_func(data, option_dir, crypto, duration)
+    return getGraph_dualInvestment__day
 
 # Run the server
 if __name__ == '__main__':

@@ -11,28 +11,28 @@ h1 {
     color: #4682B4;
 }
 
-.contentSection{
+.contentSection {
     background-color: #fffefb;
     text-align: 'center';
     font-family: 'Arial';
     margin: 20px;
 }
 
-.filter-divs{
-    justify-content:flex-start;
+.filter-divs {
+    justify-content: flex-start;
     display: flex;
     flex-direction: row;
     align-items: center;
 }
 
-.filter-item{
+.filter-item {
     display: flex;
     flex-direction: column;
     margin: 10px;
     width: 20%;
 }
 
-.submit-item{
+.submit-item {
     display: flex;
     flex-direction: column;
     margin: 10px;
@@ -41,7 +41,7 @@ h1 {
     align-self: flex-end;
 }
 
-.dropdown-class-2{
+.dropdown-class-2 {
     width: 100%;
     margin: 10px auto;
     font-size: 16px;
@@ -49,7 +49,8 @@ h1 {
 
 /* Style the dropdown container */
 .dropdown-class-1 {
-    width: 100%; /* Adjust width */
+    width: 100%;
+    /* Adjust width */
     margin: 10px auto;
     font-size: 16px;
 }
@@ -73,27 +74,34 @@ h1 {
     font-weight: bold;
 }
 
-.numerical-input{
+.numerical-input {
     margin: 10px auto;
     width: 100%;
     font-size: 16px;
 }
 
-.numerical-input:focus{
+.numerical-input:focus {
     box-shadow: none;
 }
 
-.submit-button{
+.slider-input{
+    margin: 10px auto;
+    width: 60%;
+    font-size: 16px;
+}
+
+.slider-input:focus{
+    box-shadow: none;
+}
+
+.submit-button {
     background-color: #ffbc1e;
     border-color: #ffbc1e;
     width: 50%;
 
 }
 
-.submit-button:hover{
+.submit-button:hover {
     background-color: #ffbc1e;
     border-color: #c4911b;
 }
-
-
-
