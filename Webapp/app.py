@@ -156,4 +156,4 @@ def makeGraph_dualInvestment_day_func(stored_data, duration, option_dir, crypto)
 
 # Run the server
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
