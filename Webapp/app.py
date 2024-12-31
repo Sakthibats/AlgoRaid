@@ -1,4 +1,4 @@
-from src.dualInvestments import getData_dualInvestment, getGraph_dualInvestment_all_func, getGraph_dualInvestment_day_func
+from src.dualInvestments import data_pandas, getData_dualInvestment, getDummyGraph, getGraph_dualInvestment_all_func, getGraph_dualInvestment_day_func
 from src.generic import getData_historical_live, getGraph_historical_live, numeric_formating_validation
 from flask import Flask # type: ignore
 import dash # type: ignore
@@ -15,7 +15,7 @@ server = Flask(__name__)
 
 # Initialize Dash app
 app = dash.Dash(__name__, server=server, url_base_pathname='/', external_stylesheets=[dbc.themes.BOOTSTRAP])
-app.title = "BNB DualOptions Analytics"
+app.title = "DualOptions Analytics"
 app._favicon = ("birdlogo1.png")
 
 # Define Dash layout
@@ -53,6 +53,7 @@ app.layout = html.Div(
                             options=[
                                 {'label': 'Bitcoin (BTC)', 'value': 'BTC'},
                                 {'label': 'Ethereum (ETH)', 'value': 'ETH'},
+                                {'label': 'Binance Coin (BNB)', 'value': 'BNB'},
                                 {'label': 'Dogecoin (DOGE)', 'value': 'DOGE'},
                                 {'label': 'Solana (SOL)', 'value': 'SOL'},
                             ],
@@ -95,12 +96,16 @@ app.layout = html.Div(
             id="loading-spinner",
             type="default",  # Spinner type: "circle", "dot", or "default"
             children=[
+                html.Label( id="strikePrice-label", style={'color': '#4682B4'}),
+                dcc.Dropdown(id="strikePrice-select", className="dropdown-class-2"),
                 dcc.Graph(id='options-graph-overall'),  # Placeholder for the graph
                 html.Label('Number of days to expiration:', style={'color': '#4682B4'}),
                 dcc.Dropdown(id="duration-select", className="dropdown-class-2"),
                 dcc.Graph(id='options-graph-day'),  # Placeholder for the graph
             ]
         ),
+        html.Div(id='error-message2', style={'color': 'red'}),
+
     ]
 )
 
@@ -125,37 +130,43 @@ def validate_and_format(number_text):
     
 @app.callback(
     Output('stored-data', 'data'),
-    Output('options-graph-overall', 'figure'),
     Output("duration-select", "options"),
     Output("duration-select", "value"),
+    Output("strikePrice-select", "options"),
+    Output("strikePrice-select", "value"),
+    Output("strikePrice-label", "children"),
     Input('submit-button', 'n_clicks'),
     State('putcall-select', 'value'),
     State('crypto-select', 'value'),
-    State('numeric-input', 'value')
 )
-def makeGraph_dualInvestment_all_func(n_clicks, option_dir, crypto, usd_amt_string):
+def makeGraph_dualInvestment_all_func(n_clicks, option_dir, crypto):
     if n_clicks is None:
         # If the button hasn't been clicked, prevent any action
         raise dash.exceptions.PreventUpdate
-    usd_amt = int("".join(usd_amt_string.split(",")))
-    data = getData_dualInvestment( option_dir, crypto, usd_amt)
-    data_dict = data.to_dict('records')
-    getGraph_dualInvestment_all = getGraph_dualInvestment_all_func(data, option_dir, crypto)
-    durations = sorted([int(duration) for duration in data["duration"].unique()])
+    data, durations,strikprices = getData_dualInvestment( option_dir, crypto)
+    strikeprice_label = f"{["Minimum", "Maximum"][option_dir=="PUT"]} StrikePrice:"
+    return data, durations, durations[0], strikprices, strikprices[0], strikeprice_label
 
-    return data_dict, getGraph_dualInvestment_all, durations, durations[0]
+
 
 @app.callback(
+    Output('options-graph-overall', 'figure'),
     Output('options-graph-day', 'figure'),
     Input('stored-data', 'data'),
     Input("duration-select", "value"),
     State('putcall-select', 'value'),
     State('crypto-select', 'value'),
+    Input('numeric-input', 'value'),
+    Input("strikePrice-select", "value"),
 )
-def makeGraph_dualInvestment_day_func(stored_data, duration, option_dir, crypto):
-    data = pd.DataFrame.from_records(stored_data)
-    getGraph_dualInvestment__day = getGraph_dualInvestment_day_func(data, option_dir, crypto, duration)
-    return getGraph_dualInvestment__day
+def makeGraph_dualInvestment_day_func(stored_data, duration, option_dir, crypto, usd_amt_string, strikprice_target):
+    USDAmt = int("".join(usd_amt_string.split(",")))
+    data_df = pd.DataFrame.from_records(stored_data)
+    data = data_pandas(data_df, crypto, USDAmt)
+    getGraph_dualInvestment_all = getGraph_dualInvestment_all_func(data, option_dir, crypto, strikprice_target)
+    getGraph_dualInvestment_day = getGraph_dualInvestment_day_func(data, option_dir, crypto, duration)
+    return getGraph_dualInvestment_all, getGraph_dualInvestment_day
+
 
 # Run the server
 if __name__ == '__main__':
