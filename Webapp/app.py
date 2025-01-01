@@ -1,14 +1,15 @@
-from src.dualInvestments import data_pandas, getData_dualInvestment, getDummyGraph, getGraph_dualInvestment_all_func, getGraph_dualInvestment_day_func
+from src.dualInvestments import data_pandas, getData_dualInvestment, getGraph_dualInvestment_all_func, getGraph_dualInvestment_day_func
 from src.generic import getData_historical_live, getGraph_historical_live, numeric_formating_validation
 from flask import Flask # type: ignore
 import dash # type: ignore
 from dash import dcc, html# type: ignore
 from dash.dependencies import Input, Output, State # type: ignore
-import plotly.graph_objs as go # type: ignore
 import dash_bootstrap_components as dbc # type: ignore
 import pandas as pd # type: ignore
+import os
+from dotenv import load_dotenv
 
-
+load_dotenv()
 
 # Initialize Flask server
 server = Flask(__name__)
@@ -17,6 +18,10 @@ server = Flask(__name__)
 app = dash.Dash(__name__, server=server, url_base_pathname='/', external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.title = "DualOptions Analytics"
 app._favicon = ("birdlogo1.png")
+
+PORT = os.environ['PORT']
+
+
 
 # Define Dash layout
 app.layout = html.Div(
@@ -171,5 +176,5 @@ def makeGraph_dualInvestment_day_func(stored_data, duration, option_dir, crypto,
 # Run the server
 if __name__ == '__main__':
     from waitress import serve
-    serve(app.server, host='0.0.0.0', port=8050, threads=8)  # Increase thread count
+    serve(app.server, host="0.0.0.0", port=PORT, threads=8)  # Increase thread count
     # app.run(debug=True) #debug mode

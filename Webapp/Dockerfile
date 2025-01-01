@@ -18,6 +18,8 @@ EXPOSE 8050
 # Set environment variables for Flask
 ENV FLASK_APP=app.py
 ENV FLASK_ENV=production
+ENV PORT=8050
+ENV HOST=0.0.0.0
 
 # Command to run the app
-CMD ["waitress-serve", "--host=0.0.0.0", "--port=8050", "--threads=8", "app:app.server"]
+CMD ["python", "app.py"]
