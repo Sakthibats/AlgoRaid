@@ -43,17 +43,17 @@ def getData_dualInvestment_across_stablecoins(direction,target):
     stablecoin_list = ["USDC", "USDT", "FDUSD"]
     fin = []
 
-    if direction=="CALL":
-        for stablecoin in stablecoin_list:
-            try:
+    for stablecoin in stablecoin_list:
+        try:
+            if direction=="CALL":
                 partial_data = get_DualInvestment_assetPair(direction, stablecoin, target )
                 fin.extend(partial_data)
-            except Exception as e:
-                print(f"exception found: {e}")
-    else:
-        for stablecoin in stablecoin_list:
-            partial_data = get_DualInvestment_assetPair(direction, target, stablecoin)
-            fin.extend(partial_data)
+            else:
+                partial_data = get_DualInvestment_assetPair(direction, target, stablecoin)
+                fin.extend(partial_data)
+        except Exception as e:
+            print(f"exception found: {e}")
+        
     return fin
 
 
@@ -88,7 +88,7 @@ def getData_dualInvestment(direction, target):
     return filtered_data, durations_list, strikprices_list
 
 def data_pandas(df,target, USDAmt):
-    curr_price = float(get_price(f"{target}USDC")["price"])
+    curr_price = float(get_price(f"{target}USDT")["price"])
     df["Curr_price"]  = curr_price
     df["StrikePrice"] = pd.to_numeric(df["StrikePrice"])
     df["Percent_to_strikeprice"] = 100*(df["StrikePrice"] - df["Curr_price"])/df["Curr_price"]
