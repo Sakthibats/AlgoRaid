@@ -22,6 +22,7 @@ server = Flask(__name__)
 
 # Initialize Dash app
 app = dash.Dash(__name__, server=server, url_base_pathname='/', external_stylesheets=[dbc.themes.BOOTSTRAP])
+app._favicon = ("birdlogo1.png")
 
 PORT = os.environ['PORT']
 
