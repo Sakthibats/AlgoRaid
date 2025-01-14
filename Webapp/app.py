@@ -22,8 +22,6 @@ server = Flask(__name__)
 
 # Initialize Dash app
 app = dash.Dash(__name__, server=server, url_base_pathname='/', external_stylesheets=[dbc.themes.BOOTSTRAP])
-app.title = "Dual Investment(Options) Analytics"
-app._favicon = ("birdlogo1.png")
 
 PORT = os.environ['PORT']
 
@@ -34,7 +32,7 @@ app.index_string = """
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>DualOptions Analytics</title>
+        <title>Dual Investment(Options) Analytics</title>
         <link rel="icon" type="image/png" href="birdlogo1.png">
         <!-- Google Analytics -->
         <script async src="https://www.googletagmanager.com/gtag/js?id={GA_TRACKING_ID}"></script>
