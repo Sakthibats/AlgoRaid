@@ -45,7 +45,7 @@ def create_footer():
         style={
             'textAlign': 'center',
             'padding': '20px',
-            'backgroundColor': '#f1f1f1',
+            'backgroundColor': '#fffefb',
             'borderTop': '1px solid #ccc',
             'marginTop': '20px'
         }
