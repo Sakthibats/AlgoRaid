@@ -10,9 +10,10 @@ from dash.dependencies import Input, Output, State # type: ignore
 import dash_bootstrap_components as dbc # type: ignore
 import pandas as pd # type: ignore
 import os
-from dotenv import load_dotenv
+from dotenv import load_dotenv # type: ignore
 
-load_dotenv()
+load_dotenv(override=True)
+GA_TRACKING_ID = os.getenv('GA_TRACKING_ID')  # Default ID
 
 # Initialize Flask server
 server = Flask(__name__)
@@ -24,10 +25,46 @@ app._favicon = ("birdlogo1.png")
 
 PORT = os.environ['PORT']
 
+# Add Google Analytics script to the index_string
+app.index_string = """
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>DualOptions Analytics</title>
+        <link rel="icon" type="image/png" href="birdlogo1.png">
+        <!-- Google Analytics -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id={GA_TRACKING_ID}"></script>
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){{dataLayer.push(arguments);}}
+          gtag('js', new Date());
+          gtag('config', '{GA_TRACKING_ID}');
+        </script>
+        {%metas%}
+        {%favicon%}
+        {%css%}
+    </head>
+    <body>
+        <div id="app">
+            {%app_entry%}
+        </div>
+        <footer>
+            {%config%}
+            {%scripts%}
+            {%renderer%}
+        </footer>
+    </body>
+</html>
+"""
+
+
 # Define Dash layout
 app.layout = html.Div(
     className="contentSection",
     children=[
+        # html.Div([html.Script(google_analytics_script)], style={"display": "none"}),
         dcc.Store(id='stored-data'),
         html.H1('Binance Dual Options visualizer', style={'textAlign': 'left'} ),
         create_mainFilters(),
