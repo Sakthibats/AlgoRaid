@@ -1,3 +1,5 @@
+from src.components.header import create_header
+from src.components.footer import create_footer
 from src.components.mainFilters import create_mainFilters
 from src.components.allOptionsChart import create_allOptionsChart
 from src.components.dayOptionsChart import create_dayOptionsChart
@@ -20,7 +22,7 @@ server = Flask(__name__)
 
 # Initialize Dash app
 app = dash.Dash(__name__, server=server, url_base_pathname='/', external_stylesheets=[dbc.themes.BOOTSTRAP])
-app.title = "DualOptions Analytics"
+app.title = "Dual Investment(Options) Analytics"
 app._favicon = ("birdlogo1.png")
 
 PORT = os.environ['PORT']
@@ -64,13 +66,13 @@ app.index_string = """
 app.layout = html.Div(
     className="contentSection",
     children=[
-        # html.Div([html.Script(google_analytics_script)], style={"display": "none"}),
         dcc.Store(id='stored-data'),
-        html.H1('Binance Dual Options visualizer', style={'textAlign': 'left'} ),
+        create_header(),
         create_mainFilters(),
         dcc.Graph(id='price-graph'),
         create_allOptionsChart(),
-        create_dayOptionsChart()
+        create_dayOptionsChart(),
+        create_footer()
     ]
 )
 

@@ -25,6 +25,7 @@ label {
     flex-direction: row;
     align-items: center;
     height: 10vh;
+    margin-top: 30px;
 }
 
 .filter-item {
