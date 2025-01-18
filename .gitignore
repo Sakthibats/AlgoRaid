@@ -3,3 +3,4 @@
 /.webvenv
 *__pycache__/
 /Experiments/figures
+.DS_Store
