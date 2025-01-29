@@ -3,7 +3,28 @@ from src.binance_boilerplate import boilerplate
 from src.generic import get_price
 import pandas as pd # type: ignore
 import plotly.express as px # type: ignore
+from sqlalchemy.exc import ProgrammingError
+from sqlalchemy import create_engine, inspect
+import os
 
+# Database connection details (move to config file in production)
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_HOST = os.getenv("DB_HOST")
+DB_PORT = os.getenv("DB_PORT")
+DB_NAME = os.getenv("DB_NAME")
+
+# Construct the database URL for SQLAlchemy
+DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+
+# Create a SQLAlchemy engine
+engine = create_engine(DATABASE_URL, 
+                       pool_size=5,         # Number of connections in the pool
+                       max_overflow=10,     # Additional connections if the pool is exhausted
+                       pool_timeout=30,     # Timeout for waiting for a connection
+                       pool_recycle=3600,   # Recycle connections every hour (to avoid stale connections)
+                       pool_pre_ping=True   # Test connections before use to avoid using stale ones)
+)
 
 def get_DCI_products(optionType, exercisedCoin, investCoin, pageSize, pageIndex):
 
@@ -151,3 +172,54 @@ def getDummyGraph():
     )
     
     return fig
+
+
+def load_data_to_postgres(df, table_name):
+    """
+    Loads data into a PostgreSQL table. If the table exists, appends or replaces data depending on schema changes.
+    
+    Args:
+        df (pd.DataFrame): The data to be loaded.
+        table_name (str): The name of the PostgreSQL table.
+
+    Returns:
+        dict: Summary statistics including rows added and table name.
+    """
+    try:
+        inspector = inspect(engine)
+        table_exists = inspector.has_table(table_name)
+
+        rows_added = 0  # Track the number of rows added
+        if table_exists:
+            # Check for schema changes
+            existing_columns = set(c['name'] for c in inspector.get_columns(table_name))
+            new_columns = set(df.columns)
+
+            if existing_columns != new_columns:
+                print(f"Schema for '{table_name}' has changed. Replacing the table.")
+                df.to_sql(table_name, engine, if_exists='replace', index=False)
+                rows_added = len(df)
+            else:
+                print(f"Appending data to '{table_name}'.")
+                df.to_sql(table_name, engine, if_exists='append', index=False)
+                rows_added = len(df)
+        else:
+            print(f"Table '{table_name}' does not exist. Creating it.")
+            df.to_sql(table_name, engine, if_exists='replace', index=False)
+            rows_added = len(df)
+
+        return rows_added
+
+    except ProgrammingError as e:
+        # Handle type mismatch errors
+        if "type" in str(e).lower() and "mismatch" in str(e).lower():
+            print(f"Type mismatch detected for '{table_name}'. Replacing the table.")
+            df.to_sql(table_name, engine, if_exists='replace', index=False)
+            rows_added = len(df)
+            return rows_added
+        else:
+            print(f"ProgrammingError: {e}")
+            raise
+    except Exception as e:
+        print(f"Error loading data to PostgreSQL: {e}")
+        raise

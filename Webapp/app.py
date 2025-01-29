@@ -1,11 +1,12 @@
+from datetime import datetime 
 from src.components.header import create_header
 from src.components.footer import create_footer
 from src.components.mainFilters import create_mainFilters
 from src.components.allOptionsChart import create_allOptionsChart
 from src.components.dayOptionsChart import create_dayOptionsChart
-from src.dualInvestments import data_pandas, getData_dualInvestment, getGraph_dualInvestment_all_func, getGraph_dualInvestment_day_func
+from src.dualInvestments import data_pandas, getData_dualInvestment, getGraph_dualInvestment_all_func, getGraph_dualInvestment_day_func, load_data_to_postgres, engine
 from src.generic import getData_historical_live, getGraph_historical_live, numeric_formating_validation
-from flask import Flask # type: ignore
+from flask import Flask, request, jsonify # type: ignore
 import dash # type: ignore
 from dash import dcc, html# type: ignore
 from dash.dependencies import Input, Output, State # type: ignore
@@ -13,6 +14,10 @@ import dash_bootstrap_components as dbc # type: ignore
 import pandas as pd # type: ignore
 import os
 from dotenv import load_dotenv # type: ignore
+import psycopg2
+from sqlalchemy import create_engine
+import time
+
 
 load_dotenv(override=True)
 GA_TRACKING_ID = os.getenv('GA_TRACKING_ID')  # Default ID
@@ -25,7 +30,7 @@ app = dash.Dash(__name__, server=server, url_base_pathname='/', external_stylesh
 app.title = "Dual Investment(Options) Analytics"
 app._favicon = ("birdlogo1.png")
 
-PORT = os.environ['PORT']
+PORT = os.getenv('PORT')
 
 # Add Google Analytics script to the index_string
 app.index_string = """
@@ -60,7 +65,6 @@ app.index_string = """
     </body>
 </html>
 """.replace("GA_TRACKING_ID", GA_TRACKING_ID)
-
 
 # Define Dash layout
 app.layout = html.Div(
@@ -185,6 +189,53 @@ def update_graphs_day(
     except ValueError:
         return {}
 
+@server.route('/info-personal', methods=['post'])
+def info_personal():
+    pass
+
+@server.route('/cron', methods=['GET'])
+def cron_job_endpoint():
+    try:
+        # Fetch Buy Data
+        buydata, buydurations, buystrike_prices = getData_dualInvestment("PUT", "BTC")  # Buy
+        buydataFrame = pd.DataFrame.from_records(buydata)
+        buyprocessed_data = data_pandas(buydataFrame, "BTC", 10000)
+
+        # Fetch Sell Data
+        selldata, selldurations, sellstrike_prices = getData_dualInvestment("CALL", "BTC")  # Sell
+        selldataFrame = pd.DataFrame.from_records(selldata)
+        sellprocessed_data = data_pandas(selldataFrame, "BTC", 10000)
+
+        # Current Date and time to round down to nearest hour represent as DDMMYY:HH
+        # Get the current date and time, rounded down to the nearest hour
+        current_datetime = datetime.now().replace(minute=0, second=0, microsecond=0)
+
+        # Convert current_datetime to a formatted string (e.g., DDMMYY:HH)
+        formatted_datetime = current_datetime.strftime("%d%m%y:%H")
+
+        # Add the date column to Dataframe
+        buyprocessed_data["date"] = formatted_datetime
+        sellprocessed_data["date"] = formatted_datetime
+
+        # Load data to PostgreSQL
+        buy_stats = load_data_to_postgres(buyprocessed_data, "dual_investment_buy")
+        sell_stats = load_data_to_postgres(sellprocessed_data, "dual_investment_sell")
+
+        # Response message with summary statistics
+        response_message = {
+            "message": f"Cron job successfully executed! {buy_stats}Calls {sell_stats}Puts",
+            "executed_for": current_datetime.strftime("%d%m%y:%H%M")
+        }
+
+        return jsonify(response_message), 200
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return jsonify({"message": f"An error occurred: {e}"}), 500
+    
+@server.teardown_appcontext
+def shutdown_session(exception=None):
+    engine.dispose()
 
 # Run the server
 if __name__ == '__main__':
