@@ -223,3 +223,16 @@ def load_data_to_postgres(df, table_name):
     except Exception as e:
         print(f"Error loading data to PostgreSQL: {e}")
         raise
+
+def get_account_summary():
+    
+    # Define the endpoint and base URL
+    endpoint = '/fapi/v2/account'
+
+    # Define request parameters
+    params = {
+        'recvWindow': 60000,  # Optional
+        'timestamp': int(time.time() * 1000)  # Current timestamp in milliseconds
+    }
+
+    return boilerplate(params, endpoint)

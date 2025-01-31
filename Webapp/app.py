@@ -4,7 +4,7 @@ from src.components.footer import create_footer
 from src.components.mainFilters import create_mainFilters
 from src.components.allOptionsChart import create_allOptionsChart
 from src.components.dayOptionsChart import create_dayOptionsChart
-from src.dualInvestments import data_pandas, getData_dualInvestment, getGraph_dualInvestment_all_func, getGraph_dualInvestment_day_func, load_data_to_postgres, engine
+from src.dualInvestments import data_pandas, get_account_summary, getData_dualInvestment, getGraph_dualInvestment_all_func, getGraph_dualInvestment_day_func, load_data_to_postgres, engine
 from src.generic import getData_historical_live, getGraph_historical_live, numeric_formating_validation
 from flask import Flask, request, jsonify # type: ignore
 import dash # type: ignore
@@ -189,9 +189,23 @@ def update_graphs_day(
     except ValueError:
         return {}
 
-@server.route('/info-personal', methods=['post'])
+@server.route('/info-personal', methods=['GET'])
 def info_personal():
-    pass
+    try:
+        data = get_account_summary()
+        print(data)
+        
+        # Response message with summary statistics
+        response_message = {
+            "message": f"Job successfully executed!",
+        }
+
+        return jsonify(response_message), 200
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return jsonify({"message": f"An error occurred: {e}"}), 500
+
 
 @server.route('/cron', methods=['GET'])
 def cron_job_endpoint():
@@ -239,6 +253,6 @@ def shutdown_session(exception=None):
 
 # Run the server
 if __name__ == '__main__':
-    from waitress import serve
-    serve(app.server, host="0.0.0.0", port=PORT, threads=8)  # Increase thread count
-    # app.run(debug=True) #debug mode
+    # from waitress import serve
+    # serve(app.server, host="0.0.0.0", port=PORT, threads=8)  # Increase thread count
+    app.run(debug=True) #debug mode
