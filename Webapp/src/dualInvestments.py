@@ -6,6 +6,8 @@ import plotly.express as px # type: ignore
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy import create_engine, inspect
 import os
+from datetime import datetime 
+
 
 # Database connection details (move to config file in production)
 DB_USER = os.getenv("DB_USER")
@@ -224,15 +226,26 @@ def load_data_to_postgres(df, table_name):
         print(f"Error loading data to PostgreSQL: {e}")
         raise
 
-def get_account_summary():
-    
-    # Define the endpoint and base URL
-    endpoint = '/fapi/v2/account'
+def cronJob_options(current_datetime):
+    # Fetch Buy Data
+    buydata, buydurations, buystrike_prices = getData_dualInvestment("PUT", "BTC")  # Buy
+    buydataFrame = pd.DataFrame.from_records(buydata)
+    buyprocessed_data = data_pandas(buydataFrame, "BTC", 10000)
 
-    # Define request parameters
-    params = {
-        'recvWindow': 60000,  # Optional
-        'timestamp': int(time.time() * 1000)  # Current timestamp in milliseconds
-    }
+    # Fetch Sell Data
+    selldata, selldurations, sellstrike_prices = getData_dualInvestment("CALL", "BTC")  # Sell
+    selldataFrame = pd.DataFrame.from_records(selldata)
+    sellprocessed_data = data_pandas(selldataFrame, "BTC", 10000)
 
-    return boilerplate(params, endpoint)
+    # Convert current_datetime to a formatted string (e.g., DDMMYY:HH)
+    formatted_datetime = current_datetime.strftime("%d%m%y:%H")
+
+    # Add the date column to Dataframe
+    buyprocessed_data["date"] = formatted_datetime
+    sellprocessed_data["date"] = formatted_datetime
+
+    # Load data to PostgreSQL
+    buy_stats = load_data_to_postgres(buyprocessed_data, "dual_investment_buy")
+    sell_stats = load_data_to_postgres(sellprocessed_data, "dual_investment_sell")
+
+    return buy_stats, sell_stats
