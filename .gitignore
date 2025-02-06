@@ -4,3 +4,4 @@
 *__pycache__/
 /Experiments/figures
 .DS_Store
+*.csv
