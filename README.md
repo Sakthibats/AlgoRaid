@@ -1,6 +1,6 @@
 # AlgoRaid
 
-Hosted link: [bnoptionsvizualize](https://bnoptionsvizualize.onrender.com/)
+Hosted link: [bnoptionsvizualize](https://bnoptionsviz.online/)
 
 [Dislclaimer: Webapp is for experimentations, simulations and knowledge purposes only. Not financial advice of any kind]
 
