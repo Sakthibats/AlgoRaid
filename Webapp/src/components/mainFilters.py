@@ -32,9 +32,11 @@ def create_mainFilters():
                             options=[
                                 {'label': 'Bitcoin (BTC)', 'value': 'BTC'},
                                 {'label': 'Ethereum (ETH)', 'value': 'ETH'},
+                                {'label': 'WbEthereum (ETH)', 'value': 'WBETH'},
                                 {'label': 'Binance Coin (BNB)', 'value': 'BNB'},
                                 {'label': 'Dogecoin (DOGE)', 'value': 'DOGE'},
                                 {'label': 'Solana (SOL)', 'value': 'SOL'},
+                                {'label': 'Ripple (XRP)', 'value': 'XRP'},
                             ],
                             value='BTC',  # Default value
                             clearable=False

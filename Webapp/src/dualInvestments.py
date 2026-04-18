@@ -118,6 +118,7 @@ def data_pandas(df,target, USDAmt):
     df["StrikePrice"] = df.StrikePrice.astype(float)
     df["APR"] = df.APR.astype(float)
     df["PremiumReceived(USD)"] = df["APR"]*df["Duration"]*USDAmt/365
+    df["Total amount(USD)"] = USDAmt*df["StrikePrice"]/df["Curr_price"] + df["PremiumReceived(USD)"]
     return df
 
 def getGraph_dualInvestment_all_func(df, direction, target, strikprice_target):
@@ -129,7 +130,7 @@ def getGraph_dualInvestment_all_func(df, direction, target, strikprice_target):
     color_text = ['ExercisedCoin', 'InvestCoin'][direction=="PUT"]
     verbose = ["Sell-High", "Buy-Low"][direction=="PUT"]
     
-    fig = px.scatter(df_strikeprice, x="Duration", y="APR", color=color_text, title=f"{target} {direction} ({verbose}) Options under Dual investment", hover_data=["PremiumReceived(USD)", "Percent_to_strikeprice", "StrikePrice", "InvestCoin"])
+    fig = px.scatter(df_strikeprice, x="Duration", y="APR", color=color_text, title=f"{target} {direction} ({verbose}) Options under Dual investment", hover_data=["PremiumReceived(USD)", "Percent_to_strikeprice", "StrikePrice", "InvestCoin", "Total amount(USD)"])
     
     return fig
 
@@ -140,7 +141,7 @@ def getGraph_dualInvestment_day_func(df, direction, target, duration):
     color_text = ['ExercisedCoin', 'InvestCoin'][direction=="PUT"]
     verbose = ["Sell-High", "Buy-Low"][direction=="PUT"]
 
-    fig = px.line(df_time, x="StrikePrice", y="APR", color=color_text, title=f"{target} {direction} ({verbose}) Options under Dual investment ({duration} days)", markers=True, hover_data=["PremiumReceived(USD)", "Percent_to_strikeprice", "StrikePrice", "InvestCoin"])
+    fig = px.line(df_time, x="StrikePrice", y="APR", color=color_text, title=f"{target} {direction} ({verbose}) Options under Dual investment ({duration} days)", markers=True, hover_data=["PremiumReceived(USD)", "Percent_to_strikeprice", "StrikePrice", "InvestCoin", "Total amount(USD)"])
 
     return fig
 

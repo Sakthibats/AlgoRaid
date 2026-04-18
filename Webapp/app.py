@@ -111,21 +111,25 @@ def validate_and_format(number_text: str):
     State("crypto-select", "value"),
 )
 def update_data(n_clicks: int, option_dir: str, crypto: str):
-    if n_clicks is None:
-        raise dash.exceptions.PreventUpdate
+    try:
+        if n_clicks is None:
+            raise dash.exceptions.PreventUpdate
 
-    data, durations, strike_prices = getData_dualInvestment(option_dir, crypto)
-    strike_price_label = (
-        "Maximum StrikePrice:" if option_dir == "PUT" else "Minimum StrikePrice:"
-    )
-    return (
-        data,
-        durations,
-        durations[0],
-        strike_prices,
-        strike_prices[0],
-        strike_price_label,
-    )
+        data, durations, strike_prices = getData_dualInvestment(option_dir, crypto)
+        strike_price_label = (
+            "Maximum StrikePrice:" if option_dir == "PUT" else "Minimum StrikePrice:"
+        )
+        return (
+            data,
+            durations,
+            durations[0],
+            strike_prices,
+            strike_prices[0],
+            strike_price_label,
+        )
+    except Exception as e:
+        print(f"error: {e}")
+        return
 
 @app.callback(
     Output("options-graph-overall", "figure"),
@@ -154,8 +158,9 @@ def update_graphs_all(
         )
 
         return overall_fig
-    except ValueError:
-        return {}
+    except Exception as e:
+        print(f"error: {e}")
+        return
     
 @app.callback(
     Output("options-graph-day", "figure"),
@@ -183,31 +188,32 @@ def update_graphs_day(
             processed_data, option_dir, crypto, duration
         )
         return day_fig
-    except ValueError:
-        return {}
-
-@server.route('/cron', methods=['GET'])
-def cron_job_endpoint():
-    try:
-        current_datetime = datetime.now().replace(minute=0, second=0, microsecond=0)
-        buy_stats, sell_stats = cronJob_options(current_datetime)
-        response_message = {
-            "message": f"Cron job successfully executed! {buy_stats}Calls {sell_stats}Puts",
-            "executed_for": current_datetime.strftime("%d%m%y:%H%M")
-        }
-        return jsonify(response_message), 200
-
     except Exception as e:
-        print(f"An error occurred: {e}")
-        return jsonify({"message": f"An error occurred: {e}"}), 500
+        print(f"error: {e}")
+        return
+
+# @server.route('/cron', methods=['GET'])
+# def cron_job_endpoint():
+#     try:
+#         current_datetime = datetime.now().replace(minute=0, second=0, microsecond=0)
+#         buy_stats, sell_stats = cronJob_options(current_datetime)
+#         response_message = {
+#             "message": f"Cron job successfully executed! {buy_stats}Calls {sell_stats}Puts",
+#             "executed_for": current_datetime.strftime("%d%m%y:%H%M")
+#         }
+#         return jsonify(response_message), 200
+
+#     except Exception as e:
+#         print(f"An error occurred: {e}")
+#         return jsonify({"message": f"An error occurred: {e}"}), 500
     
-@server.route('/account', methods=['GET'])
-def cron_job_endpoint():
-    #create summary of binance account
-    pass
+# @server.route('/account', methods=['GET'])
+# def cron_job_endpoint():
+#     #create summary of binance account
+#     pass
 
 # Run the server
 if __name__ == '__main__':
-    # from waitress import serve
-    # serve(app.server, host="0.0.0.0", port=PORT, threads=8)  # Increase thread count
-    app.run(debug=True) #debug mode
+    from waitress import serve
+    serve(app.server, host="0.0.0.0", port=PORT, threads=8)  # Increase thread count
+    # app.run(debug=True) #debug mode
